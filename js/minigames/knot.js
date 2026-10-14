@@ -10,7 +10,7 @@ window.knotData = { progress: 0, isDragging: false };
                     <h2 class="text-2xl font-black uppercase text-white mb-2">Wire Knot</h2>
                     <p class="text-slate-300 mb-6 text-sm">Drag the knot to the end to untangle!</p>
                     
-                    <div class="relative h-20 bg-slate-800 rounded-full border-4 border-slate-600 mb-8 mx-4 flex items-center px-2">
+                    <div id="wire-knot-track" class="relative h-20 bg-slate-800 rounded-full border-4 border-slate-600 mb-8 mx-4 flex items-center px-2">
                         <!-- Wire Line -->
                         <div class="absolute left-4 right-4 h-1 bg-white opacity-20"></div>
                         
@@ -27,7 +27,7 @@ window.knotData = { progress: 0, isDragging: false };
             state.pendingModals.push({
                 rawHtml: html,
                 onOpen: () => {
-                    const container = document.querySelector('.relative.h-20');
+                    const container = document.getElementById('wire-knot-track');
                     const knot = document.getElementById('wire-knot');
                     
                     container.addEventListener('mousemove', (e) => {
