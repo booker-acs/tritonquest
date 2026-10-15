@@ -4056,6 +4056,12 @@ window.finishSocialGame = function(score) {
                 });
             };
 
+            // Weekly work-hour cap: 24 during the school year, 40 during summer break (matches finishWorkShift)
+            window.getWeeklyHourCap = function() {
+                const isSummerVacation = state.currentSeasonIndex === 3 && state.dayOfMonth >= 5;
+                return isSummerVacation ? 40 : 24;
+            };
+
             window.finishWorkShift = function(passed, customPerf = null, customEnergy = null, customMsg = null) {
                 
                 let perf = customPerf !== null ? customPerf : (passed ? 10 : -15);
@@ -4774,7 +4780,7 @@ window.finishSocialGame = function(score) {
                                     </div>`;
                                 }
                                 
-                                if ((state.hoursWorkedThisWeek || 0) >= 24) {
+                                if ((state.hoursWorkedThisWeek || 0) >= window.getWeeklyHourCap()) {
                                     return `<div class="py-4 rounded-2xl bg-slate-800 text-slate-500 font-black uppercase text-xs flex flex-col items-center justify-center cursor-not-allowed text-center gap-1">
                                         <span class="text-2xl grayscale opacity-50">🛑</span>
                                         <span>MAX HOURS</span>
@@ -6303,8 +6309,12 @@ window.startClubActivity = function(clubId) {
                     }
                 });
             }
-            if (state.job && !state.hasWorkedToday) state.consecutiveDaysOffWork++;
-            if (state.job && state.consecutiveDaysOffWork > 1) state.jobPerformance = Math.max(0, state.jobPerformance - 15);
+            // Days off count against you (weekends too), but only while you still could have worked this week.
+            // Once the weekly hours cap is met, time between shifts isn't tracked until the next week.
+            if (state.job && !state.hasWorkedToday && (state.hoursWorkedThisWeek || 0) < window.getWeeklyHourCap()) {
+                state.consecutiveDaysOffWork++;
+                if (state.consecutiveDaysOffWork > 1) state.jobPerformance = Math.max(0, state.jobPerformance - 15);
+            }
 
             // --- BURNOUT LOGIC (Stress) ---
             if (state.burnoutWarningActive) {
@@ -7118,6 +7128,9 @@ window.startClubActivity = function(clubId) {
 
             
             
+            // Going to bed hungry is what costs energy, so read it before the morning hunger reset below
+            const wentToBedHungry = state.hungerLevel === 0;
+
             // --- NEW ROUNDMEAL PERSISTENCE LOGIC ---
             if (state.roundmealQueued) {
                 // Apply the queued status for this new day
@@ -7144,7 +7157,7 @@ window.startClubActivity = function(clubId) {
             // Penalties (Calculated in finalizeDay for display, applied here)
             if (state.negativeTrait === 'sleepy') wakeUpEnergy -= 20;
             if (state.stress > 60) wakeUpEnergy -= 20;
-            if (state.hungerLevel === 0) wakeUpEnergy -= 20;
+            if (wentToBedHungry) wakeUpEnergy -= 20;
 
             // Apply Variance (+/- 5%) and Clamp
             const variance = Math.floor(Math.random() * 10 - 5);
