@@ -179,6 +179,7 @@
     <script src="js/data.js"></script>
     <script src="js/persona_data.js"></script>
     <script src="js/inventory.js"></script>
+    <script src="js/phone.js"></script>
     <script src="js/minigames/vending.js"></script>
     <script src="js/minigames/basketball.js"></script>
     <script src="js/minigames/burger.js"></script>
@@ -267,6 +268,7 @@ appearance: { skin: '#FFDBAC', eyeColor: '#634e34', shirt: '#002147', hairColor:
             dayIndex: 0,
             dayTotal: 1,
             tutorialSeen: false,
+            phoneSeen: {}, // apps the player has opened (drives new-app badges)
             currentSeasonIndex: 0, // Starts in Fall
             viewedSeasonIndex: 0,
             dayOfMonth: 1,
@@ -833,7 +835,7 @@ appearance: { skin: '#FFDBAC', eyeColor: '#634e34', shirt: '#002147', hairColor:
                             <h2 class="text-2xl font-black uppercase text-indigo-900 leading-none">Common App</h2>
                             <p class="text-slate-500 font-bold uppercase text-[10px] tracking-widest">Apply for your future</p>
                         </div>
-                        <button onclick="window.openPhoneMenu()" class="bg-slate-200 text-slate-500 px-4 py-2 rounded-xl font-bold uppercase text-[10px] hover:bg-slate-300">Back</button>
+                        <button onclick="if (!window.phoneReturn('commonapp')) window.openPhoneMenu()" class="bg-slate-200 text-slate-500 px-4 py-2 rounded-xl font-bold uppercase text-[10px] hover:bg-slate-300">Back</button>
                     </div>
 
                     <div class="bg-indigo-50 p-3 rounded-xl border border-indigo-100 mb-4 text-[10px] text-indigo-800">
@@ -1453,6 +1455,7 @@ appearance: { skin: '#FFDBAC', eyeColor: '#634e34', shirt: '#002147', hairColor:
 
                 // Cancel
                 document.getElementById('btn-studio-cancel').onclick = () => {
+                     if (window.phoneReturn('style')) return;
                      document.getElementById('modal-overlay').classList.add('hidden');
                      setTimeout(() => window.renderSimDashboard(), 100);
                 };
@@ -1471,8 +1474,9 @@ appearance: { skin: '#FFDBAC', eyeColor: '#634e34', shirt: '#002147', hairColor:
                     
                     if (bill > 0) state.lastDayExpenses.push({ name: "Style Studio", cost: bill, type: 'cash' });
                     
-                    document.getElementById('modal-overlay').classList.add('hidden');
                     window.updateUI();
+                    if (window.phoneReturn('style')) return;
+                    document.getElementById('modal-overlay').classList.add('hidden');
                     setTimeout(() => window.renderSimDashboard(), 100);
                 };
             };
@@ -1996,7 +2000,7 @@ appearance: { skin: '#FFDBAC', eyeColor: '#634e34', shirt: '#002147', hairColor:
                 "Back to Menu", 
                 "👥", 
                 () => {
-                    window.openPhoneMenu();
+                    if (!window.phoneReturn('contacts')) window.openPhoneMenu();
                 }, 
                 null, 
                 false, 
@@ -2292,89 +2296,6 @@ window.finishSocialGame = function(score) {
             }
         };
 
-        window.openPhoneMenu = function() {
-            document.getElementById('modal-overlay').classList.add('hidden');
-
-            // Define Apps
-            const apps = [
-                { id: "id_card", name: "ID Card", icon: "🆔", action: "window.showCharacterResume()", color: "bg-white" },
-                { id: "contacts", name: "Contacts", icon: "👥", action: "window.openContactsMenu()", color: "bg-pink-600" },
-                { id: "style", name: "Style", icon: "✂️", action: "window.openStyleStudio()", color: "bg-blue-500" },
-                { id: "health", name: "Health", icon: "🩺", action: "window.handleHealthCheck()", color: "bg-red-500" }, // NEW
-                { id: "bank", name: "Bank", icon: "🏦", action: "window.openBankingApp()", color: "bg-emerald-600" },
-                { id: "invest", name: "Invest", icon: "📈", action: "window.openInvestmentApp()", color: "bg-green-600" },
-                { id: "readedit", name: "Readedit", icon: "📱", action: "window.scrollPhone()", color: "bg-green-500" },
-                { id: "dingdong", name: "Ding Dong", icon: "🎵", action: "window.openDingDong()", color: "bg-black border border-slate-600" },
-                { id: "save", name: "Save", icon: "💾", action: "window.openSaveMenu()", color: "bg-slate-600" },
-
-            ];
-        // NEW: Common App (Senior Year Only - Year 4)
-            // Or technically Year 3 Summer? Let's say Year 4 Fall start.
-            if (state.currentYear >= 4) {
-                apps.push({ id: "commonapp", name: "College App", icon: "🎓", action: "window.openCollegeApp()", color: "bg-indigo-800 border border-indigo-500" });
-            }
-
-            const gridHtml = apps.map(app => {
-                // --- DYNAMIC ICON LOOKUP ---
-                // Key format: app_[id]_icon (e.g. app_readedit_icon)
-                const artKey = `app_${app.id}_icon`;
-                
-                // If custom art exists, use it. Otherwise use the emoji.
-                // Note: We remove the text-2xl class if using an image so it fits the container properly
-                const iconContent = (window.GAME_ART && window.GAME_ART[artKey])
-                    ? window.GAME_ART[artKey] // Custom Image (Ensure your HTML in GAME_ART has w-8 h-8 or similar classes)
-                    : `<div class="text-2xl">${app.icon}</div>`; // Default Emoji
-                
-                return `
-                <button onclick="document.getElementById('modal-overlay').classList.add('hidden'); setTimeout(() => ${app.action}, 100)" class="flex flex-col items-center gap-1 group">
-                    <div class="w-12 h-12 ${app.color} rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform text-white overflow-hidden">
-                        ${iconContent}
-                    </div>
-                    <span class="text-[9px] font-bold text-slate-300 tracking-wide">${app.name}</span>
-                </button>
-                `;
-            }).join('');
-
-            const phoneHtml = `
-                <div class="flex justify-center items-center h-full py-4" onclick="if(event.target === this) { document.getElementById('modal-overlay').classList.add('hidden'); }">
-                    <div class="bg-slate-900 rounded-[2.5rem] border-8 border-slate-800 w-72 shadow-2xl relative overflow-hidden flex flex-col pointer-events-auto">
-                        <!-- Status Bar -->
-                        <div class="bg-slate-900 px-4 py-2 flex justify-between text-[10px] text-slate-400 font-mono select-none">
-                            <span>${state.dayTotal > 0 ? 'Day ' + state.dayTotal : 'No Sim'}</span>
-                            <span>100% 🔋</span>
-                        </div>
-                        
-                        <!-- Screen Content -->
-                        <div class="bg-slate-900 flex-1 p-6">
-                            <!-- Clock Widget -->
-                            <div class="text-center mb-8 mt-4">
-                                <div class="text-4xl font-thin text-white">${window.SEASONS[state.currentSeasonIndex]}</div>
-                                <div class="text-xs text-acs-gold uppercase tracking-widest font-bold">Day ${state.dayOfMonth}</div>
-                            </div>
-
-                            <!-- App Grid -->
-                            <div class="grid grid-cols-3 gap-y-6 gap-x-4">
-                                ${gridHtml}
-                            </div>
-                        </div>
-
-                        <!-- Home Indicator -->
-                        <div class="bg-slate-900 h-10 flex justify-center items-center">
-                            <button onclick="document.getElementById('modal-overlay').classList.add('hidden');" class="w-16 h-1 bg-slate-600 rounded-full hover:bg-white transition-colors"></button>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            state.pendingModals.push({
-                rawHtml: phoneHtml,
-                onOpen: () => {} 
-            });
-            window.processModalQueue();
-        };
-
-        
-
         window.openBankingApp = function() {
             // Ensure bankBalance exists
             if (typeof state.bankBalance === 'undefined') state.bankBalance = 0.00;
@@ -2469,8 +2390,10 @@ window.finishSocialGame = function(score) {
                         };
 
                         document.getElementById('btn-bank-close').onclick = () => {
-                            document.getElementById('modal-overlay').classList.add('hidden');
-                            setTimeout(window.openPhoneMenu, 100);
+                            if (!window.phoneReturn('bank')) {
+                                document.getElementById('modal-overlay').classList.add('hidden');
+                                setTimeout(window.openPhoneMenu, 100);
+                            }
                         };
                     }
                 });
@@ -2570,7 +2493,7 @@ window.finishSocialGame = function(score) {
             <div class="mt-6 pt-4 border-t border-slate-100  gap-2">
                 
                 <button id="btn-resume-close" class="w-full py-3 bg-slate-200 text-slate-500 rounded-xl font-black uppercase tracking-widest shadow-md hover:bg-white transition-all text-[10px]">
-                    Close
+                    Back
                 </button>
             </div>
         </div>
@@ -2590,6 +2513,7 @@ window.finishSocialGame = function(score) {
 
             // 3. Close Button
             document.getElementById('btn-resume-close').onclick = () => {
+                if (window.phoneReturn('id_card')) return;
                 document.getElementById('modal-overlay').classList.add('hidden');
                 setTimeout(window.processModalQueue, 100);
             };
@@ -2609,7 +2533,7 @@ window.finishSocialGame = function(score) {
             // NEW: Usage Limit Check
             if (!hasUnlimited && state.phoneScrollCount >= 3) {
                 document.getElementById('modal-overlay').classList.add('hidden');
-                window.queueModal("Data Limit Reached", "You've hit your daily data cap. Subscribe to Eye-Mobile for unlimited scrolling.", "Okay", "📶", () => window.openPhoneMenu());
+                window.queueModal("Data Limit Reached", "You've hit your daily data cap. Subscribe to Eye-Mobile for unlimited scrolling.", "Okay", "📶", () => { if (!window.phoneReturn('readedit')) window.openPhoneMenu(); });
                  return;
             }
             // Energy Calculation
@@ -2622,11 +2546,11 @@ window.finishSocialGame = function(score) {
             // (Or if unlimited but completely out of energy)
             if (!hasUnlimited && state.energy < energyCost) {
                 document.getElementById('modal-overlay').classList.add('hidden');
-                window.queueModal("Too Tired", `You don't have ${energyCost} energy left to scroll.`, "Okay", "💤", () => window.openPhoneMenu());
+                window.queueModal("Too Tired", `You don't have ${energyCost} energy left to scroll.`, "Okay", "💤", () => { if (!window.phoneReturn('readedit')) window.openPhoneMenu(); });
                  return;
             } else if (hasUnlimited && state.energy < 5) {
                 document.getElementById('modal-overlay').classList.add('hidden');
-                window.queueModal("Exhausted", "Even with unlimited data, you need sleep.", "Okay", "💤", () => window.openPhoneMenu());
+                window.queueModal("Exhausted", "Even with unlimited data, you need sleep.", "Okay", "💤", () => { if (!window.phoneReturn('readedit')) window.openPhoneMenu(); });
                  return;
             }
             
@@ -2705,9 +2629,9 @@ window.finishSocialGame = function(score) {
             window.queueModal(
                 "Readedit Feed", 
                 feedHtml, 
-                "Close App", 
+                "Back", 
                 "📱", 
-                null, 
+                () => window.phoneReturn('readedit'), 
                 null, 
                 false, 
                 "BROWSING" 
@@ -2719,7 +2643,7 @@ window.finishSocialGame = function(score) {
             if (state.energy < 5) {
                  // FIX: Close existing phone/app modal so warning shows immediately
                  document.getElementById('modal-overlay').classList.add('hidden');
-                window.queueModal("Too Tired", "You don't have the energy to watch infinite videos.", "Okay", "💤", () => window.openPhoneMenu());
+                window.queueModal("Too Tired", "You don't have the energy to watch infinite videos.", "Okay", "💤", () => { if (!window.phoneReturn('dingdong')) window.openPhoneMenu(); });
                    return;
             }
 
@@ -2810,7 +2734,7 @@ window.finishSocialGame = function(score) {
                 <!-- Controls -->
                 <div class="grid grid-cols-2 gap-3 mt-4">
                     <button onclick="window.openDingDong()" class="py-3 bg-indigo-600 text-white rounded-xl font-bold uppercase text-xs shadow-lg hover:bg-indigo-500">Next Video</button>
-                    <button id="btn-close-app" class="py-3 bg-slate-700 text-slate-300 rounded-xl font-bold uppercase text-xs shadow hover:bg-slate-600">Close App</button>
+                    <button id="btn-close-app" class="py-3 bg-slate-700 text-slate-300 rounded-xl font-bold uppercase text-xs shadow hover:bg-slate-600">Back</button>
                 </div>
             `;
 
@@ -2825,6 +2749,7 @@ window.finishSocialGame = function(score) {
                 buttonText: null,
                 onOpen: () => {
                     document.getElementById('btn-close-app').onclick = () => {
+                        if (window.phoneReturn('dingdong')) return;
                         document.getElementById('modal-overlay').classList.add('hidden');
                         setTimeout(window.processModalQueue, 100);
                     };
@@ -3270,7 +3195,7 @@ window.finishSocialGame = function(score) {
                 </div>
             `;
 
-            window.queueModal("SYSTEM MENU", menuHtml, "Close", "💾", null, null, false, "SAVE / LOAD");
+            window.queueModal("SYSTEM MENU", menuHtml, "Close", "💾", () => window.phoneReturn('save'), null, false, "SAVE / LOAD");
 
             setTimeout(() => {
                 const btn = document.getElementById('btn-save-game');
@@ -4994,7 +4919,7 @@ window.finishSocialGame = function(score) {
             
             // Note: queueModal passes "HEALTH CHECK" as the gold superHeader
             // Pass window.updateUI as the callback to ensure sync on close
-            window.queueModal("Vitals Audit", "Biological and psychological status report." + html, "Close", "🏥", () => window.updateUI(), null, false, "HEALTH CHECK");
+            window.queueModal("Vitals Audit", "Biological and psychological status report." + html, "Back", "🏥", () => { window.updateUI(); window.phoneReturn('health'); }, null, false, "HEALTH CHECK");
         };
 
         window.getHealthDiagnosis = function() {
@@ -6947,7 +6872,7 @@ window.startClubActivity = function(clubId) {
                  setTimeout(() => {
                     window.queueModal(
                         "SENIOR YEAR", 
-                        "Welcome to the final stretch. The <strong>College App</strong> has been installed on your phone.<br><br>You can now apply to colleges. Application fees cost money and energy. Decisions will be released in the Spring.", 
+                        "Welcome to the final stretch. The <strong>College App</strong> has been installed on your phone, in the <strong>Financials</strong> folder.<br><br>You can now apply to colleges. Application fees cost money and energy. Decisions will be released in the Spring.", 
                         "Let's Go", 
                         "🎓", 
                         () => window.checkHolidayTrigger(), // Chain into the holiday check (First Day of School)
