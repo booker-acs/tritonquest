@@ -83,8 +83,6 @@ window.startFishingGame = function() {
                 <div id="fight-ui" class="hidden absolute inset-0 z-10">
                     <div class="absolute top-[60%] left-1/2 -translate-x-1/2 text-4xl opacity-50">🌊</div>
                     <div id="fish-avatar" class="absolute top-[65%] text-4xl transition-all duration-100" style="left: 50%;">🐟</div>
-                    <div id="fish-hint" class="absolute top-[53%] text-xl font-black text-red-400 pointer-events-none" style="left: 50%;"></div>
-                    <div id="fish-tutorial" class="absolute top-3 left-4 right-4 bg-black/70 border border-yellow-300 rounded-xl py-2 px-3 text-xs font-bold text-yellow-200 pointer-events-none transition-opacity duration-500">The fish pulls one way &mdash; you pull the OPPOSITE way!<br>Follow the green arrow.</div>
                     
                     <div class="absolute bottom-4 left-4 right-4">
                         <div class="flex justify-between text-[9px] text-white font-bold mb-1">
@@ -233,10 +231,6 @@ window.handleFishClick = function() {
             rodNote.innerText = state.purchasedItems.includes('rod_upgrade') ? '\uD83C\uDFA3 PRO ROD: HALF STRAIN' : '(standard rod)';
             rodNote.className = state.purchasedItems.includes('rod_upgrade') ? 'text-green-400' : 'text-slate-400';
         }
-        d.tutTimeout = setTimeout(() => {
-            const tut = document.getElementById('fish-tutorial');
-            if (tut) tut.style.opacity = '0';
-        }, 3500);
         window.updateFishingCues();
     }
 };
@@ -322,7 +316,6 @@ window.updateFishingGame = function() {
         d.fishPos = Math.max(10, Math.min(90, d.fishPos));
 
         const fishEl = document.getElementById('fish-avatar');
-        const hintEl = document.getElementById('fish-hint');
         const tensionBar = document.getElementById('tension-bar');
         const tensionVal = document.getElementById('tension-val');
         const distEl = document.getElementById('fish-dist');
@@ -332,10 +325,6 @@ window.updateFishingGame = function() {
             // Shake the fish just before it turns
             const shake = d.turnTimer <= window.FISH_TELL_TICKS ? (d.turnTimer % 2 ? 3 : -3) : 0;
             fishEl.style.transform = `translateX(${shake}px) scaleX(${d.fishForce * -1})`;
-        }
-        if (hintEl) {
-            hintEl.style.left = d.fishPos + '%';
-            hintEl.innerText = d.fishForce < 0 ? '\u25C0\u25C0' : '\u25B6\u25B6';
         }
         if (tensionBar) {
             tensionBar.style.width = Math.min(100, d.tension) + '%';
@@ -383,7 +372,6 @@ window.finishFishingGame = function(success, msg) {
             if (window.fishingData.state === 'done') return;
             window.fishingData.state = 'done';
             clearTimeout(window.fishingData.biteTimeout);
-            clearTimeout(window.fishingData.tutTimeout);
 
             // Cleanup
             window.fishingData.active = false;
