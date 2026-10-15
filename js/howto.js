@@ -16,8 +16,8 @@ window.HOWTO_PAGES = [
         id: 'stats', icon: '📊', title: 'Six Numbers', tagline: 'The bar across the top. Look at it occasionally.',
         rows: [
             { h: '💵 Cash', t: 'You start with $100. Paychecks are taxed, so the number on the check is a lie.' },
-            { h: '⚡ Energy', t: 'Almost everything costs it. It refills overnight, minus 20 each for high stress, being hungry, and being a Sleepyhead.' },
-            { h: '🍔 Hunger', t: 'You wake up Hungry every morning (a Hungry Box fixes that). Eat something.' },
+            { h: '⚡ Energy', t: 'Almost everything costs it. It refills overnight, minus 20 each for high stress, going to bed hungry, and being a Sleepyhead.' },
+            { h: '🍔 Hunger', t: 'You wake up Hungry every morning (a Hungry Box fixes that). Eat something before bed, or tomorrow costs you 20 energy.' },
             { h: '🎓 GPA', t: 'Starts at 2.0. Class and homework raise it. Skipping and bad days lower it. Under 1.5 for two days is a problem.' },
             { h: '💬 Social', t: 'Drops 15 every day on its own. At 20 or below you\'re Lonely, and it shows up at work.' },
             { h: '🧠 Stress', t: 'Goes up from school, work and choices. Down from food, free time and friends. 85+ for two days is how people collapse.' }
@@ -50,7 +50,8 @@ window.HOWTO_PAGES = [
             { h: 'Cheap Energy', t: 'Iced Coffee or Energy Drink ($5): lots of energy, lots of stress.' },
             { h: 'Comfort Food', t: 'Pancakes or a Burger ($10): big stress relief, and you stay full.' },
             { h: 'Real Food', t: 'Breakfast Burrito or Lentil Salad ($15): steady energy, no stress.' },
-            { h: 'Hungry at School', t: "Going to class hungry wrecks your GPA. The game offers you breakfast first. Take it." }
+            { h: 'Hungry at School', t: "Going to class hungry wrecks your GPA. The game offers you breakfast first. Take it." },
+            { h: 'Bedtime', t: "Go to bed hungry and you wake up with 20 less energy. Even the free school lunch counts as eating. Coffee and energy drinks don't." }
         ]
     },
     {
@@ -58,9 +59,9 @@ window.HOWTO_PAGES = [
         rows: [
             { h: 'Getting Hired', t: 'Jobs board, pick a listing, then apply (20 energy). A resume check and an interview follow. The badge on each listing tells you how realistic it is.' },
             { h: 'Shifts', t: 'Need 35 energy (25 if you Multitask) and a commute. Weekday shifts are 4 hours, weekends 8. Summer shifts are 8, with a 40-hour week.' },
-            { h: 'Weekly Cap', t: "Outside summer you can work 24 hours a week. It resets Monday. After that the Work button says MAX HOURS." },
+            { h: 'Weekly Cap', t: "You can work 24 hours a week, or 40 during summer break. It resets Monday. After that the Work button says MAX HOURS." },
             { h: 'Pay', t: 'About a quarter goes to taxes. Promotions raise your wage.' },
-            { h: 'Rating', t: "Shown next to your name. Good shifts raise it. Skip work two days in a row and it drops 15 a day until you clock in. That includes weekends." },
+            { h: 'Rating', t: "Shown next to your name. Good shifts raise it. Skip work two days in a row and it drops 15 a day until you clock in. Weekends count. Once you've hit the weekly hour cap, though, days off stop counting until next week." },
             { h: 'Quitting', t: "It's on the Jobs board. Flunk out and school will make you quit for you." }
         ]
     },
