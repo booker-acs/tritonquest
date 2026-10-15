@@ -406,6 +406,24 @@ appearance: { skin: '#FFDBAC', eyeColor: '#634e34', shirt: '#002147', hairColor:
                 return !seenList.includes(id);
             });
 
+            // If we've seen everything, reset the seen list and make everything available again
+            if (availableIndices.length === 0) {
+                seenList.length = 0; // Clear array in place
+                availableIndices = pool.map((_, index) => index);
+            }
+
+            // Pick a random index from the available ones
+            const chosenIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+            const chosenItem = pool[chosenIndex];
+            
+            // Mark as seen
+            const idToStore = identifierKey ? chosenItem[identifierKey] : (typeof chosenItem === 'string' ? chosenItem : chosenIndex);
+            seenList.push(idToStore);
+
+            return chosenItem;
+        };
+
+
         
 
         
@@ -1093,23 +1111,6 @@ appearance: { skin: '#FFDBAC', eyeColor: '#634e34', shirt: '#002147', hairColor:
         }
     }
 };
-
-            // If we've seen everything, reset the seen list and make everything available again
-            if (availableIndices.length === 0) {
-                seenList.length = 0; // Clear array in place
-                availableIndices = pool.map((_, index) => index);
-            }
-
-            // Pick a random index from the available ones
-            const chosenIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)];
-            const chosenItem = pool[chosenIndex];
-            
-            // Mark as seen
-            const idToStore = identifierKey ? chosenItem[identifierKey] : (typeof chosenItem === 'string' ? chosenItem : chosenIndex);
-            seenList.push(idToStore);
-
-            return chosenItem;
-        };
 
         window.goToStep = function(stepName) {
             state.step = stepName;
