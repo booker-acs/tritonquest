@@ -104,7 +104,7 @@ window.renderMinigameList = function() {
                     title: "Daily Events",
                     games: [
                         { name: "Seagull Attack", func: "startSeagullEvent" },
-                        { name: "Popup Blocker", func: "startPopupGame" },                     
+                        { name: "Popup Blocker", func: "startPopupEvent" },                     
                         { name: "Vending Machine", func: "startVendingMachineEvent" },
                         { name: "Locker Jam", func: "startLockerJamEvent" },
                         { name: "Rainstorm", func: "startRainEvent" },
