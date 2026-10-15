@@ -26,7 +26,10 @@ window.PHONE_APPS = [
           badge: () => !(state.phoneSeen || {}).commonapp,
           action: () => window.openCollegeApp() }
     ]},
-    { id: "save", name: "Save", icon: "💾", color: "bg-slate-600", action: () => window.openSaveMenu() }
+    { id: "save", name: "Save", icon: "💾", color: "bg-slate-600", action: () => window.openSaveMenu() },
+    { id: "howto", name: "How to Play", icon: "📖", color: "bg-amber-500",
+      badge: () => !(state.phoneSeen || {}).howto,
+      action: () => window.openHowToPlay() }
 ];
 
 window.findPhoneApp = function(id) {
