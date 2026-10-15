@@ -293,6 +293,20 @@ function getInvestmentById(id) {
     return null;
 }
 
+// Prices live on the INVESTMENT_DATA objects rather than in `state`, so they're mirrored into state.marketPrices
+// and put back here after a load. Older saves without marketPrices fall back to the latest point in their price history.
+window.restoreMarketPrices = function() {
+    const D = window.INVESTMENT_DATA;
+    if (!D) return;
+    const all = [D.indexFund, ...D.commodities, ...D.stocks, ...D.crypto];
+    const saved = (state && state.marketPrices) || {};
+    all.forEach(a => {
+        const hist = state.investmentHistory && state.investmentHistory[a.id];
+        const p = Number.isFinite(saved[a.id]) ? saved[a.id] : (hist && hist.length ? hist[hist.length - 1] : a.originalPrice);
+        a.price = (Number.isFinite(p) && p > 0) ? p : a.originalPrice;
+    });
+};
+
 // Market simulation function
 window.simulateMarket = function() {
     if (!state.investmentHistory) {
@@ -327,6 +341,8 @@ window.simulateMarket = function() {
         newPrice *= trend;
         const minPrice = asset.originalPrice * 0.01;
         asset.price = Math.max(minPrice, newPrice);
+        if (!state.marketPrices) state.marketPrices = {};
+        state.marketPrices[asset.id] = asset.price;
 
         // --- History Tracking ---
         if (!state.investmentHistory[asset.id]) {

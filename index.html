@@ -190,6 +190,7 @@
     <script src="js/howto.js"></script>
     <script src="js/tutorial.js"></script>
     <script src="js/tuition.js"></script>
+    <script src="js/savesystem.js"></script>
     <script src="js/minigames/vending.js"></script>
     <script src="js/minigames/basketball.js"></script>
     <script src="js/minigames/burger.js"></script>
@@ -406,8 +407,12 @@ appearance: { skin: '#FFDBAC', eyeColor: '#634e34', shirt: '#002147', hairColor:
                 daysFished: 0,
                 timesWorkedOut: 0,
             },
-            seenSongs: []
+            seenSongs: [],
+            marketPrices: {} // live investment prices, mirrored here so they survive saving and loading
         };
+
+        // Pristine copy of the starting state; used to fill in anything an older or imported save is missing
+        window.INITIAL_STATE = JSON.parse(JSON.stringify(state));
 
         // ==========================================
         // 3. UTILITY FUNCTIONS
@@ -3070,176 +3075,9 @@ window.finishSocialGame = function(score) {
         
 
         // --- SAVE SYSTEM HELPERS ---
-        window.SAVE_KEY = "triton_quest_saves";
-
-        window.getSaves = function() {
-            try {
-                const raw = localStorage.getItem(window.SAVE_KEY);
-                return raw ? JSON.parse(raw) : {};
-            } catch (e) {
-                console.warn("Save system not available:", e);
-                return {}; 
-            }
-        };
-
-        window.doSave = function(name) {
-            try {
-                const saves = window.getSaves();
-                // Timestamp
-                state.saveTimestamp = new Date().toLocaleString();
-                state.saveName = name;
-                
-                saves[name] = state;
-                localStorage.setItem(window.SAVE_KEY, JSON.stringify(saves));
-                
-                document.getElementById('modal-overlay').classList.add('hidden');
-                setTimeout(() => {
-                    window.queueModal("GAME SAVED", `Progress saved to slot: <strong>${name}</strong>`, "Okay", "💾");
-                }, 100);
-            } catch (e) {
-                window.queueModal("ERROR", "Could not save game. Storage might be disabled.", "Okay", "❌");
-            }
-        };
-
-        window.doLoad = function(name) {
-            const saves = window.getSaves();
-            if (saves[name]) {
-                // 1. STOP CURRENT MUSIC (Fix)
-                if (state.gameLoopAudio) {
-                    state.gameLoopAudio.pause();
-                    state.gameLoopAudio = null;
-                }
-                if (state.introAudio) {
-                    state.introAudio.pause();
-                    // Don't null introAudio as it might be reused if we quit to menu, 
-                    // but pausing it is enough.
-                }
-                if (state.currentAudio) {
-                    state.currentAudio.pause();
-                    state.currentAudio = null;
-                }
-
-                // 2. Overwrite State
-                state = saves[name];
-                if (typeof state.bankBalance === 'undefined') state.bankBalance = 0.00;
-                
-                // 3. Cleanup Intervals (from previous state)
-                if (window.paddleData && window.paddleData.interval) clearInterval(window.paddleData.interval);
-                if (window.consoleData && window.consoleData.interval) clearInterval(window.consoleData.interval);
-                if (window.tripData && window.tripData.interval) clearInterval(window.tripData.interval);
-                // (Add other minigame intervals here if needed)
-                
-                // 4. Reset Audio Handles in New State
-                // Since audio objects don't save to JSON, the loaded state has them as null/undefined.
-                // We ensure they are null so the manager re-creates them fresh.
-                state.currentAudio = null;
-                state.introAudio = null;
-                state.gameLoopAudio = null;
-                
-                // 5. UI Refresh
-                document.getElementById('modal-overlay').classList.add('hidden');
-                setTimeout(() => {
-                    window.manageBackgroundAudio(); // Will start fresh music based on loaded state
-                    window.updateUI();
-                    window.queueModal("LOADED", `Welcome back, ${state.playerName}.`, "Resume", "👋");
-                }, 100);
-            }
-        };
-
-        window.deleteSave = function(name) {
-            // 1. Close the current Save Menu so the Confirmation modal can appear
-            document.getElementById('modal-overlay').classList.add('hidden');
-
-            // 2. Queue Confirmation with a slight delay
-            setTimeout(() => {
-                window.queueModal(
-                    "DELETE SAVE?", 
-                    `Are you sure you want to permanently delete <strong>${name}</strong>? This cannot be undone.`, 
-                    "Delete", 
-                    "🗑️", 
-                    (confirmed) => {
-                        if (confirmed) {
-                            const saves = window.getSaves();
-                            delete saves[name];
-                            localStorage.setItem(window.SAVE_KEY, JSON.stringify(saves));
-                        }
-                        // Re-open the menu (refreshed) whether confirmed or cancelled
-                        window.openSaveMenu(); 
-                    }, 
-                    "Cancel"
-                );
-            }, 100);
-        };
-
-        window.openSaveMenu = function() {
-            const saves = window.getSaves();
-            const saveKeys = Object.keys(saves);
-
-            const menuHtml = `
-                <div class="flex flex-col gap-6 text-left">
-                    <div class="bg-slate-800 p-4 rounded-2xl border border-slate-600">
-                        <h3 class="text-xs font-black uppercase text-acs-gold mb-2 tracking-widest">Create New Save</h3>
-                        <div class="flex gap-2">
-                            <input type="text" id="save-name-input" placeholder="Save Name (e.g. 'Run 1')" class="flex-1 bg-slate-900 border border-slate-600 rounded-xl px-3 py-2 text-sm text-white focus:border-acs-gold outline-none">
-                            <button id="btn-save-game" class="bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold uppercase text-xs hover:bg-indigo-500 transition-all">Save</button>
-                        </div>
-                    </div>
-
-                    <div class="flex-grow">
-                        <h3 class="text-xs font-black uppercase text-slate-400 mb-2 tracking-widest">Load Game</h3>
-                        <div class="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scroll">
-                            ${saveKeys.length === 0 ? `<div class="text-slate-600 italic text-sm text-center py-4">No saved games found.</div>` : ''}
-                            
-                            ${saveKeys.map(key => {
-                                const s = saves[key];
-                                return `
-                                    <div class="flex items-center justify-between bg-slate-800/50 p-3 rounded-xl border border-slate-700/50 hover:border-slate-500 transition-all group">
-                                        <div>
-                                            <div class="font-bold text-sm text-white">${key}</div>
-                                            <div class="text-[9px] text-slate-500 uppercase tracking-wider">
-                                                Day ${s.dayTotal} • ${s.playerName} • $${s.balance.toFixed(0)}
-                                            </div>
-                                        </div>
-                                        <div class="flex gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
-                                            <button onclick="window.doLoad('${key}')" class="bg-green-600 text-white px-3 py-1.5 rounded-lg font-bold text-[10px] hover:bg-green-500">LOAD</button>
-                                            <button onclick="window.deleteSave('${key}')" class="bg-red-900 text-red-300 px-3 py-1.5 rounded-lg font-bold text-[10px] hover:bg-red-700 hover:text-white">DEL</button>
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            window.queueModal("SYSTEM MENU", menuHtml, "Close", "💾", () => window.phoneReturn('save'), null, false, "SAVE / LOAD");
-
-            setTimeout(() => {
-                const btn = document.getElementById('btn-save-game');
-                const input = document.getElementById('save-name-input');
-                if (btn && input) {
-                    btn.onclick = () => {
-                        const name = input.value.trim();
-                        if (name) window.doSave(name);
-                    };
-                }
-            }, 100);
-        };
-
         // --- REPLACEMENT FOR EXISTING renderStart ---
         window.renderStart = function() {
-            // Check for saves safely
-            let hasSaves = false;
-            try {
-                const saves = window.getSaves();
-                hasSaves = Object.keys(saves).length > 0;
-            } catch(e) {}
-
-            const continueBtn = hasSaves ? `
-                <button onclick="window.openSaveMenu()" class="w-full bg-slate-800 border-2 border-slate-600 text-slate-300 font-black py-4 rounded-2xl shadow-lg hover:border-acs-gold hover:text-white transition-all text-lg uppercase tracking-widest mt-4">
-                    Continue Career
-                </button>
-            ` : '';
+            const continueBtn = window.startScreenSaveButtons();
 
             const screen = document.getElementById('game-screen');
             screen.innerHTML = `
@@ -6760,6 +6598,7 @@ window.startClubActivity = function(clubId) {
             });
 
             state.step = 'day_summary'; 
+            window.autosave(); // loading it later puts you back on this summary, so tomorrow's morning events still happen
             window.updateUI();
         };
 
@@ -6858,6 +6697,7 @@ window.startClubActivity = function(clubId) {
 
                     <!-- Footer Action -->
                     <div class="text-center mt-6 flex-shrink-0">
+                        ${window.autosaveNote()}
                         <button onclick="window.startNextDay()" class="bg-indigo-600 hover:text-white px-12 py-4 rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl hover:bg-indigo-700 hover:scale-105 transition-all text-sm">
                             Start Next Day
                         </button>

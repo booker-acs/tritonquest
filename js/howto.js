@@ -127,7 +127,7 @@ window.HOWTO_PAGES = [
             { h: 'The Phone', t: 'Tap your portrait or the phone icon. Contacts, Personal Info (ID Card, Health, Style), Socials (Readedit, Ding Dong), Financials (Bank, Invest, College App), Save, and this app.' },
             { h: 'Socials', t: 'Scrolling costs energy and lowers stress. Ding Dong boosts Social. Neither is productive. Both are very effective.' },
             { h: 'Bank & Invest', t: 'Money in the Bank is out of reach of impulse purchases, and it earns a little interest every day (about 6% a year). Investments move every day, in both directions.' },
-            { h: 'Saving', t: "There's no autosave. Phone, then Save, then pick a slot name. Close the tab without saving and it's gone. Load from Continue Career on the title screen." }
+            { h: 'Saving', t: "The game autosaves every night when the day summary appears, keeping the last two. You can also save by name in the Save app. Browser saves stay in that browser, so use Download to get a save file you can keep as a backup or load on another computer. Load from the title screen (Continue Career, or Load Save File)." }
         ]
     }
 ];
