@@ -142,7 +142,7 @@
                     ]
                 },
                 20: { 
-                    name: "Grilldependence Day", icon: "🌭", desc:"Mark your nation's founding. Celebrate by grilling a firework!", audioFile: "audio/holidays/grilldependence.ogg",
+                    name: "Grilldependence Day", icon: "🌭", desc:"Mark your nation's founding. Celebrate by grilling a firework!", audioFile: "audio/holidays/grillday.ogg",
                     spinData: [
                         { label: "Master", color: "#f87171", effect: { hungerSet: 2 }, msg: "Perfectly grilled hot dog. Delicious." },
                         { label: "Burnt", color: "#1a202c", effect: { stress: 5 }, msg: "You dropped your burger in the coals." },
