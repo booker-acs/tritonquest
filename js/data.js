@@ -713,7 +713,6 @@
             { artist: "Doctor Greewood", song: "Mark of a Champion", file: "audio/pearpods/champion.ogg" },//
             { artist: "Mr. P", song: "You Down With I.S.S.", file: "audio/pearpods/iss.ogg" },//
             { artist: "Murphy's Law", song: "Smile, Mr. Booker", file: "audio/pearpods/smile.ogg" },//
-            { artist: "Muscle Boys", song: "Muscle Boys", file: "audio/pearpods/muscleboys.ogg" },//
             { artist: "Ronnie James Booker", song: "Where Did You Go?", file: "audio/pearpods/wheredidyougo.ogg" },//
             { artist: "Mickey Chav", song: "Meat Madness", file: "audio/pearpods/madness.ogg" },//
             { artist: "Big Dan Band", song: "Your Yondrin' Heart", file: "audio/pearpods/yonderin.ogg" }//
