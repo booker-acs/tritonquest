@@ -1,10 +1,34 @@
 window.PERSONA_DATA = {
     mundane: [
         {
+            title: "The Fine Print",
+            icon: "🔍",
+            narrative: "You signed a private loan in four minutes and will spend the next ten years reading it. {collegeName} is thrilled to have you, and so is your lender, who has already sent three emails with the subject line 'Great news!'. You owe {debt}. At least you got the signing bonus.",
+            conditions: { accepted: true, loanType: 'private' }
+        },
+        {
+            title: "The Procrastinator",
+            icon: "⏳",
+            narrative: "You chose the loan where the bill arrives later, which is the most you thing you have ever done. {collegeName} will see you in the fall. Your {debt} will see you in four years, slightly larger and wearing a name tag.",
+            conditions: { accepted: true, loanType: 'deferred' }
+        },
+        {
             title: "The Scholar",
             icon: "🎓",
-            narrative: "You treated high school like a job, and it paid off. You're heading to {collegeName} with a solid GPA and a slightly concerning caffeine addiction. The next four years will be... well, more of this, but with more debt and better parties (maybe).",
+            narrative: "You treated high school like a job, and it paid off. You're heading to {collegeName} with a solid GPA and a slightly concerning caffeine addiction. The next four years will be... well, more of this, but with more debt and better parties (maybe). {tuitionNote}",
             conditions: { gpa: 3.5, accepted: true }
+        },
+        {
+            title: "The Debt-Free",
+            icon: "🧾",
+            narrative: "You paid for {collegeName} in full, with money you earned, saved, and did not spend on a seventh Pear Pods case. You start college owing nobody anything, with a savings habit that will deeply confuse your roommates.",
+            conditions: { accepted: true, paidInFull: true }
+        },
+        {
+            title: "The Borrower",
+            icon: "📝",
+            narrative: "You got into {collegeName}, and the rest of the money came from a federal loan with a very friendly logo. You owe {debt}. It's a completely normal amount to owe, which is somehow the most unsettling part.",
+            conditions: { accepted: true, hasLoan: true }
         },
         {
             title: "The Hustler",
@@ -36,7 +60,7 @@ window.PERSONA_DATA = {
             title: "The Burnout",
             icon: "🔥",
             narrative: "You flew too close to the sun, and your wings, made of energy drinks and procrastination, melted. You leave high school with a GPA that looks like a shoe size and a legendary nap-time record. Your parents are 'disappointed,' but mostly just tired. Time for a long, long nap.",
-            conditions: { gpa: 1.5, stress: 90, energy: 10 }
+            conditions: { gpa: { max: 1.5 }, stress: 90, energy: 10 }
         },
         {
             title: "The Socialite",
@@ -54,13 +78,13 @@ window.PERSONA_DATA = {
             title: "The Delinquent",
             icon: "😈",
             narrative: "You spent more time in detention than in class. You were a master of the prank, a connoisseur of chaos, a friend of Jeffrey. You leave high school with a criminal record (mostly misdemeanors) and a collection of stories you can't tell your parents. Your future is uncertain, but it won't be boring.",
-            conditions: { friend_jeff: true, gpa: 1.8 }
+            conditions: { friend_jeff: true, gpa: { max: 1.8 } }
         },
         {
             title: "The Gamer",
             icon: "🎮",
             narrative: "You sacrificed your GPA at the altar of the Game Station X. You have carpal tunnel and a sleep schedule that alarms doctors, but you also have a 10.0 K/D ratio and the respect of strangers on the internet. You're heading to college on a full-ride esports scholarship, much to your parents' confusion.",
-            conditions: { has_console: true, gpa: 2.2, energy: 20 }
+            conditions: { has_console: true, gpa: { max: 2.2 }, energy: 20 }
         }
     ],
     surreal: [

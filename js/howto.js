@@ -109,7 +109,8 @@ window.HOWTO_PAGES = [
             { h: 'Year 3', t: 'You pick up to 2 AP classes. More rounds, more GPA on the line.' },
             { h: 'Year 4', t: 'The College App appears in Phone, Financials. Applying costs $50 and 40 energy, plus a typing essay. Each school shows your odds.' },
             { h: 'Decision Day', t: 'Spring of Year 4, Day 1. If you got in, the offer letter lists financial aid. It depends on your GPA, how broke you looked when you applied, and whether you had a job.' },
-            { h: 'Paying', t: 'Pick one school and commit. The Bank app tracks your College Fund against the cost.' }
+            { h: 'Paying', t: "Pick one school and commit. Tuition comes due on the last day of Senior year. Your savings and cash on hand pay it first. Investments don't count unless you sell them, and nobody will sell them for you. The Bank app tracks how close you are." },
+            { h: 'Loans', t: "Whatever you can't cover becomes a student loan, and you choose the kind: cheap and boring, fast and sketchy, or the one where interest goes to college with you. It shows up in your ending." }
         ]
     },
     {
@@ -125,7 +126,7 @@ window.HOWTO_PAGES = [
         rows: [
             { h: 'The Phone', t: 'Tap your portrait or the phone icon. Contacts, Personal Info (ID Card, Health, Style), Socials (Readedit, Ding Dong), Financials (Bank, Invest, College App), Save, and this app.' },
             { h: 'Socials', t: 'Scrolling costs energy and lowers stress. Ding Dong boosts Social. Neither is productive. Both are very effective.' },
-            { h: 'Bank & Invest', t: 'Money in the Bank is out of reach of impulse purchases. Investments move every day, in both directions.' },
+            { h: 'Bank & Invest', t: 'Money in the Bank is out of reach of impulse purchases, and it earns a little interest every day (about 6% a year). Investments move every day, in both directions.' },
             { h: 'Saving', t: "There's no autosave. Phone, then Save, then pick a slot name. Close the tab without saving and it's gone. Load from Continue Career on the title screen." }
         ]
     }

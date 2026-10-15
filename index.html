@@ -189,6 +189,7 @@
     <script src="js/phone.js"></script>
     <script src="js/howto.js"></script>
     <script src="js/tutorial.js"></script>
+    <script src="js/tuition.js"></script>
     <script src="js/minigames/vending.js"></script>
     <script src="js/minigames/basketball.js"></script>
     <script src="js/minigames/burger.js"></script>
@@ -270,6 +271,9 @@ appearance: { skin: '#FFDBAC', eyeColor: '#634e34', shirt: '#002147', hairColor:
             job: null,
             balance: 100.00,
             bankBalance: 0.00,
+            bankInterestEarned: 0,
+            tuition: null, // set on Tuition Day: { cost, paidInFull, fromSavings, fromCash, borrowed? }
+            loan: null,    // set if you borrow: { id, name, principal, apr, monthly, totalRepaid }
             energy: 100,
             stress: 10,
             social: 100,
@@ -909,7 +913,7 @@ appearance: { skin: '#FFDBAC', eyeColor: '#634e34', shirt: '#002147', hairColor:
                         <div class="border-t border-slate-600 pt-2 mt-2 flex justify-between text-lg font-black"><span class="text-acs-gold">Net Cost</span><span class="text-white">$${finalCost.toLocaleString()}</span></div>
                     </div>
                     
-                    <p class="text-[10px] text-slate-500 mb-6 italic">By accepting, you agree to pay the net cost by the end of Senior Year (Day 28, Summer).</p>
+                    <p class="text-[10px] text-slate-500 mb-6 italic">Tuition comes due on the last day of Senior Year (Day 28, Summer). Savings and cash cover it first. Anything left over becomes a student loan.</p>
 
                     <div class="grid grid-cols-2 gap-4">
                         <button onclick="window.openCollegeApp()" class="py-3 bg-slate-700 text-slate-300 rounded-xl font-bold uppercase text-xs">Back</button>
@@ -926,7 +930,7 @@ appearance: { skin: '#FFDBAC', eyeColor: '#634e34', shirt: '#002147', hairColor:
             state.endgameStats.collegeCommitted = { id: collegeId, cost: cost };
             document.getElementById('modal-overlay').classList.add('hidden');
             setTimeout(() => {
-                window.queueModal("COMMITTED!", "You have officially committed to your college choice. Now you just need to save up the money before graduation.", "Okay", "🎉", () => window.openCollegeApp());
+                window.queueModal("COMMITTED!", "You have officially committed to your college choice. Tuition comes due on the last day of Senior Year. Savings and cash cover it first, and anything left over becomes a loan. Start saving.", "Okay", "🎉", () => window.openCollegeApp());
             }, 100);
         };
 
@@ -2317,17 +2321,18 @@ window.finishSocialGame = function(score) {
                 let collegeGoalHtml = '';
                 if (state.committedCollege) {
                     const goal = state.committedCollege.cost;
-                    const pct = Math.min(100, (bank / goal) * 100);
+                    const funds = bank + Math.max(0, cash);
+                    const pct = Math.min(100, (funds / goal) * 100);
                     collegeGoalHtml = `
                         <div class="mt-6 bg-slate-800 p-4 rounded-xl border border-slate-600 text-left">
                             <div class="flex justify-between text-xs font-bold text-slate-400 mb-1 uppercase tracking-widest">
                                 <span>College Fund</span>
-                                <span>$${bank.toLocaleString()} / $${goal.toLocaleString()}</span>
+                                <span>$${funds.toLocaleString(undefined, {maximumFractionDigits: 0})} / $${goal.toLocaleString()}</span>
                             </div>
                             <div class="w-full h-3 bg-slate-900 rounded-full overflow-hidden border border-slate-700">
                                 <div class="h-full bg-indigo-500 transition-all duration-500" style="width: ${pct}%"></div>
                             </div>
-                            <div class="text-[9px] text-slate-500 mt-1 text-right">${pct.toFixed(1)}% Funded</div>
+                            <div class="text-[9px] text-slate-500 mt-1 text-right">${pct.toFixed(1)}% Funded (savings + cash). The rest becomes a loan.</div>
                         </div>
                     `;
                 }
@@ -2347,6 +2352,8 @@ window.finishSocialGame = function(score) {
                                 <div class="text-2xl font-black text-emerald-400">$${bank.toFixed(2)}</div>
                             </div>
                         </div>
+
+                        <div class="text-[10px] text-slate-500 -mt-3 mb-4">Savings earn 0.05% a day (about 6% a year). Earned so far: $${(state.bankInterestEarned || 0).toFixed(2)}</div>
 
                         <div class="bg-slate-800 p-4 rounded-xl border border-slate-600 mb-4">
                             <input type="number" id="bank-amount" placeholder="Amount" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white font-bold text-lg outline-none focus:border-emerald-500 mb-3 text-center">
@@ -6732,6 +6739,7 @@ window.startClubActivity = function(clubId) {
             state.balance -= totalCost;
         state.endgameStats.totalMoneySpent += totalCost; 
             state.dayStats.cash -= totalCost; 
+            window.applyBankInterest(expenses);
             state.lastDayExpenses = expenses; 
 
             // Job Check
@@ -6825,6 +6833,9 @@ window.startClubActivity = function(clubId) {
                                         } else if (e.type === 'energy') {
                                             val = `-${e.cost}% Energy`;
                                             color = "text-yellow-500";    
+                                        } else if (e.type === 'savings') {
+                                            val = `+$${e.cost.toFixed(2)} Savings`;
+                                            color = "text-green-400";
                                         } else {
                                             // Default Cash
                                             val = `-$${e.cost.toFixed(2)}`;
@@ -6886,7 +6897,7 @@ window.startClubActivity = function(clubId) {
                  setTimeout(() => {
                     window.queueModal(
                         "SENIOR YEAR", 
-                        "Welcome to the final stretch. The <strong>College App</strong> has been installed on your phone, in the <strong>Financials</strong> folder.<br><br>You can now apply to colleges. Application fees cost money and energy. Decisions will be released in the Spring.", 
+                        "Welcome to the final stretch. The <strong>College App</strong> has been installed on your phone, in the <strong>Financials</strong> folder.<br><br>You can now apply to colleges. Application fees cost money and energy. Decisions will be released in the Spring, and tuition comes due on the last day of the year.", 
                         "Let's Go", 
                         "🎓", 
                         () => window.checkHolidayTrigger(), // Chain into the holiday check (First Day of School)
@@ -6930,7 +6941,11 @@ window.startClubActivity = function(clubId) {
                     );
                 }, 800);
             }
-            
+
+            // 6. Last day of Senior year: the bill is coming tonight
+            else if (state.currentYear === 4 && state.currentSeasonIndex === 3 && state.dayOfMonth === 28 && state.committedCollege) {
+                setTimeout(window.showTuitionDueNotice, 800);
+            }
             
             else {
                 // Not Day 1, or Tutorial already seen -> Check Holiday immediately
@@ -6959,8 +6974,7 @@ window.startClubActivity = function(clubId) {
             window.simulateMarket();
             // Check if the day that just ended was the final day.
             if (state.currentYear === 4 && state.currentSeasonIndex === 3 && state.dayOfMonth === 28) {
-                state.step = 'endgame';
-                window.updateUI();
+                window.startTuitionDay();
                 return;
             }
         // ENDGAME STATS TRACKING
@@ -7150,9 +7164,14 @@ window.startClubActivity = function(clubId) {
                 ...window.PERSONA_DATA.mundane
             ];
 
+            const tuitionInfo = window.getTuitionSummary();
             const playerStats = {
                 gpa: (state.grades / 100) * 4.0,
-                money: state.balance,
+                money: state.balance + (state.bankBalance || 0) - tuitionInfo.debt,
+                debt: tuitionInfo.debt,
+                hasLoan: tuitionInfo.hasLoan,
+                loanType: tuitionInfo.loanType,
+                paidInFull: tuitionInfo.paidInFull,
                 stress: stats.averageStress,
                 energy: stats.averageEnergy,
                 friendships: stats.friendshipsMade,
@@ -7175,11 +7194,21 @@ window.startClubActivity = function(clubId) {
                     if (typeof conditionValue === 'boolean' || typeof conditionValue === 'string') {
                         if (playerValue !== conditionValue) { match = false; break; }
                     } else if (typeof conditionValue === 'number') {
-                        if (playerValue === undefined || playerValue < conditionValue) { match = false; break; }
+                        // A plain number is a minimum
+                        if (!Number.isFinite(playerValue) || playerValue < conditionValue) { match = false; break; }
+                    } else if (conditionValue && typeof conditionValue === 'object') {
+                        // { min, max } lets a condition set a ceiling (e.g. low GPA) or a range
+                        if (!Number.isFinite(playerValue)) { match = false; break; }
+                        if (conditionValue.min !== undefined && playerValue < conditionValue.min) { match = false; break; }
+                        if (conditionValue.max !== undefined && playerValue > conditionValue.max) { match = false; break; }
                     }
                 }
                 if (match) {
-                    let narrativeText = persona.narrative.replace('{collegeName}', playerStats.collegeName);
+                    let narrativeText = persona.narrative
+                        .replace('{collegeName}', playerStats.collegeName)
+                        .replace('{debt}', window.moneyText(tuitionInfo.debt))
+                        .replace('{tuitionNote}', tuitionInfo.note)
+                        .trim();
                     return { ...persona, narrative: narrativeText };
                 }
             }
@@ -7226,9 +7255,12 @@ window.startClubActivity = function(clubId) {
                             <div class="space-y-2 overflow-y-auto pr-2 creator-scroll flex-grow text-xs uppercase font-bold">
                                 <div class="flex justify-between p-2 rounded bg-slate-800/50"><span>Final GPA:</span><span class="font-black text-blue-400">${es.finalGpa.toFixed(2)}</span></div>
                                 <div class="flex justify-between p-2 rounded bg-slate-800/50"><span>Final Balance:</span><span class="font-black text-green-400">$${state.balance.toFixed(2)}</span></div>
+                                <div class="flex justify-between p-2 rounded bg-slate-800/50"><span>Savings:</span><span class="font-black text-emerald-400">$${(state.bankBalance || 0).toFixed(2)}</span></div>
                                 <div class="flex justify-between p-2 rounded bg-slate-800/50"><span>Avg. Stress:</span><span class="font-black text-red-400">${es.averageStress.toFixed(0)}%</span></div>
                                 <div class="flex justify-between p-2 rounded bg-slate-800/50"><span>Avg. Energy:</span><span class="font-black text-green-400">${es.averageEnergy.toFixed(0)}%</span></div>
                                 <div class="flex justify-between p-2 rounded bg-slate-800/50"><span>College:</span><span class="font-black text-white">${state.committedCollege ? window.COLLEGE_DB.find(c=>c.id === state.committedCollege.id).name : 'None'}</span></div>
+                                ${state.tuition ? `<div class="flex justify-between p-2 rounded bg-slate-800/50"><span>Tuition:</span><span class="font-black ${state.tuition.paidInFull ? 'text-green-400' : 'text-orange-400'}">${state.tuition.paidInFull ? 'Paid in full' : 'Borrowed ' + window.moneyText(state.loan.principal)}</span></div>` : ''}
+                                ${state.loan ? `<div class="flex justify-between p-2 rounded bg-slate-800/50"><span>Loan:</span><span class="font-black text-red-400">${state.loan.name} @ ${(state.loan.apr * 100).toFixed(0)}%</span></div>` : ''}
                                 <div class="flex justify-between p-2 rounded bg-slate-800/50"><span>Final Job:</span><span class="font-black text-white">${state.job ? state.job.name : 'Unemployed'}</span></div>
                                 <div class="flex justify-between p-2 rounded bg-slate-800/50"><span>Friendships:</span><span class="font-black text-pink-400">${es.friendshipsMade}</span></div>
                                 <div class="flex justify-between p-2 rounded bg-slate-800/50"><span>Items Owned:</span><span class="font-black text-white">${es.totalItemsPurchased}</span></div>
